@@ -1,0 +1,150 @@
+#+startup: indent
+#+options: ':nil *:t -:t ::t <:t H:3 \n:nil ^:t arch:headline author:t
+#+options: broken-links:nil c:nil creator:nil d:(not "LOGBOOK") date:t e:t
+#+options: email:nil f:t inline:t num:t p:nil pri:nil prop:nil stat:t tags:t
+#+options: tasks:t tex:t timestamp:t title:t toc:t todo:t |:t
+#+title: advent-of-code-2022
+#+date: <2022-12-01 Do>
+#+author: Raffael Golomingi
+#+email: raffael.golomingi@zhaw.ch
+#+language: en
+#+select_tags: export
+#+exclude_tags: noexport
+#+creator: Emacs 28.2 (Org mode 9.5.5)
+#+cite_export:
+
+* Dependencies
+
+Here are the dependencies listed which I need.
+
+#+name: deps.edn
+#+begin_src clojure :tangle ./deps.edn :results silent
+{:desp {}}
+#+end_src
+
+* Day 1
+** Clojure
+*** Part 1
+#+begin_src clojure :results value pp replace
+(def testinput [[1000
+                 2000
+                 3000]
+
+                [4000]
+
+                [5000
+                 6000]
+
+                [7000
+                 8000
+                 9000]
+
+                [10000]])
+;; test if it works
+(inc (first (apply max-key second (map-indexed vector (mapv #(apply + %) testinput)))))
+
+(defn get-elf-with-max-calories [c]
+  (->> c
+       (mapv #(apply + %))
+       (map-indexed vector)
+       (apply max-key second)))
+
+(def input-day-1 (slurp "./input/input-day-1.txt"))
+
+(->> input-day-1
+     (clojure.string/split-lines)
+     (split-with #(= "" %))
+    )
+
+(->> (clojure.string/split  input-day-1 #"\n\n")
+     (map #(clojure.string/split-lines %))
+     (mapv (fn [i] (mapv #(Integer/parseInt %) i)))
+     (get-elf-with-max-calories )
+     (second))
+#+end_src
+
+#+RESULTS:
+: 68923
+:
+
+*** Part 2
+
+#+begin_src clojure :results value pp replace
+(def testinput [[1000
+                 2000
+                 3000]
+
+                [4000]
+
+                [5000
+                 6000]
+
+                [7000
+                 8000
+                 9000]
+
+                [10000]])
+
+
+(def input-day-1 (slurp "./input/input-day-1.txt"))
+
+(->> input-day-1
+     (clojure.string/split-lines)
+     (split-with #(= "" %)))
+
+
+
+(->> testinput
+     (mapv #(apply + %))
+     (sort)
+     (reverse)
+     (take 3)
+     (reduce +))
+
+
+
+(->> (clojure.string/split  input-day-1 #"\n\n")
+     (map #(clojure.string/split-lines %))
+     (mapv (fn [i] (mapv #(Integer/parseInt %) i)))
+     (mapv #(apply + %))
+     (sort)
+     (reverse)
+     (take 3)
+     (reduce +))
+#+end_src
+
+#+RESULTS:
+: 200044
+:
+
+** Elisp
+*** part 1
+#+begin_src elisp
+(setq input-day-1 (with-temp-buffer (insert-file-contents "./input/input-day-1.txt")
+                                    (split-string (buffer-string) "\n\n" t)))
+
+(setq input-parsed (mapcar (lambda (i) (mapcar 'string-to-number i))
+                          (mapcar (lambda (i) (split-string i "\n")) input-day-1)))
+
+(apply 'max (mapcar (lambda (i) (apply '+ i)) input-parsed))
+
+#+end_src
+
+#+RESULTS:
+: 68923
+
+*** part 2
+#+begin_src elisp
+(require 'seq)
+(setq input-day-1 (with-temp-buffer (insert-file-contents "./input/input-day-1.txt")
+                                    (split-string (buffer-string) "\n\n" t)))
+
+(setq input-parsed (mapcar (lambda (i) (mapcar 'string-to-number i))
+                          (mapcar (lambda (i) (split-string i "\n")) input-day-1)))
+
+(apply '+ (seq-take (sort (mapcar (lambda (i) (apply '+ i)) input-parsed) '>) 3))
+
+#+end_src
+
+#+RESULTS:
+: 200044
