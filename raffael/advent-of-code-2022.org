@@ -134,7 +134,7 @@ Here are the dependencies listed which I need.
 : 68923
 
 *** part 2
-#+begin_src elisp :results replace :esports both
+#+begin_src elisp :results replace :exports both
 (require 'seq)
 (setq input-day-1 (with-temp-buffer (insert-file-contents "./input/input-day-1.txt")
                                     (split-string (buffer-string) "\n\n" t)))
