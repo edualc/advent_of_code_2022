@@ -19,13 +19,13 @@ Here are the dependencies listed which I need.
 
 #+name: deps.edn
 #+begin_src clojure :tangle ./deps.edn :results silent
-{:desp {}}
+{:deps {}}
 #+end_src
 
 * Day 1
 ** Clojure
 *** Part 1
-#+begin_src clojure :results value pp replace
+#+begin_src clojure :results value pp replace :exports both
 (def testinput [[1000
                  2000
                  3000]
@@ -69,7 +69,7 @@ Here are the dependencies listed which I need.
 
 *** Part 2
 
-#+begin_src clojure :results value pp replace
+#+begin_src clojure :results value pp replace :exports both
 (def testinput [[1000
                  2000
                  3000]
@@ -119,7 +119,7 @@ Here are the dependencies listed which I need.
 
 ** Elisp
 *** part 1
-#+begin_src elisp
+#+begin_src elisp :results replace :exports both
 (setq input-day-1 (with-temp-buffer (insert-file-contents "./input/input-day-1.txt")
                                     (split-string (buffer-string) "\n\n" t)))
 
@@ -134,7 +134,7 @@ Here are the dependencies listed which I need.
 : 68923
 
 *** part 2
-#+begin_src elisp
+#+begin_src elisp :results replace :esports both
 (require 'seq)
 (setq input-day-1 (with-temp-buffer (insert-file-contents "./input/input-day-1.txt")
                                     (split-string (buffer-string) "\n\n" t)))
