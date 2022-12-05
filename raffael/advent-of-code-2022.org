@@ -1,0 +1,646 @@
+#+startup: indent
+#+options: ':nil *:t -:t ::t <:t H:3 \n:nil ^:t arch:headline author:t
+#+options: broken-links:nil c:nil creator:nil d:(not "LOGBOOK") date:t e:t
+#+options: email:nil f:t inline:t num:t p:nil pri:nil prop:nil stat:t tags:t
+#+options: tasks:t tex:t timestamp:t title:t toc:t todo:t |:t
+#+title: advent-of-code-2022
+#+date: <2022-12-01 Do>
+#+author: Raffael Golomingi
+#+email: raffael.golomingi@zhaw.ch
+#+language: en
+#+select_tags: export
+#+exclude_tags: noexport
+#+creator: Emacs 28.2 (Org mode 9.5.5)
+#+cite_export:
+
+* Dependencies
+
+Here are the dependencies listed which I need.
+
+#+name: deps.edn
+#+begin_src clojure :tangle ./deps.edn :results silent
+{:deps {}}
+#+end_src
+
+* Day 1
+** Clojure
+*** Part 1
+#+begin_src clojure :results value pp replace :exports both
+(def testinput [[1000
+                 2000
+                 3000]
+
+                [4000]
+
+                [5000
+                 6000]
+
+                [7000
+                 8000
+                 9000]
+
+                [10000]])
+;; test if it works
+(inc (first (apply max-key second (map-indexed vector (mapv #(apply + %) testinput)))))
+
+(defn get-elf-with-max-calories [c]
+  (->> c
+       (mapv #(apply + %))
+       (map-indexed vector)
+       (apply max-key second)))
+
+(def input-day-1 (slurp "./input/input-day-1.txt"))
+
+(->> input-day-1
+     (clojure.string/split-lines)
+     (split-with #(= "" %))
+    )
+
+(->> (clojure.string/split  input-day-1 #"\n\n")
+     (map #(clojure.string/split-lines %))
+     (mapv (fn [i] (mapv #(Integer/parseInt %) i)))
+     (get-elf-with-max-calories )
+     (second))
+#+end_src
+
+#+RESULTS:
+: 68923
+:
+
+*** Part 2
+
+#+begin_src clojure :results value pp replace :exports both
+(def testinput [[1000
+                 2000
+                 3000]
+
+                [4000]
+
+                [5000
+                 6000]
+
+                [7000
+                 8000
+                 9000]
+
+                [10000]])
+
+
+(def input-day-1 (slurp "./input/input-day-1.txt"))
+
+(->> input-day-1
+     (clojure.string/split-lines)
+     (split-with #(= "" %)))
+
+
+
+(->> testinput
+     (mapv #(apply + %))
+     (sort)
+     (reverse)
+     (take 3)
+     (reduce +))
+
+
+
+(->> (clojure.string/split  input-day-1 #"\n\n")
+     (map #(clojure.string/split-lines %))
+     (mapv (fn [i] (mapv #(Integer/parseInt %) i)))
+     (mapv #(apply + %))
+     (sort)
+     (reverse)
+     (take 3)
+     (reduce +))
+#+end_src
+
+#+RESULTS:
+: 200044
+:
+
+** Elisp
+*** part 1
+#+begin_src elisp :results replace :exports both
+(setq input-day-1 (with-temp-buffer (insert-file-contents "./input/input-day-1.txt")
+                                    (split-string (buffer-string) "\n\n" t)))
+
+(setq input-parsed (mapcar (lambda (i) (mapcar 'string-to-number i))
+                          (mapcar (lambda (i) (split-string i "\n")) input-day-1)))
+
+(apply 'max (mapcar (lambda (i) (apply '+ i)) input-parsed))
+
+#+end_src
+
+#+RESULTS:
+: 68923
+
+*** part 2
+#+begin_src elisp :results replace :exports both
+(require 'seq)
+(setq input-day-1 (with-temp-buffer (insert-file-contents "./input/input-day-1.txt")
+                                    (split-string (buffer-string) "\n\n" t)))
+
+(setq input-parsed (mapcar (lambda (i) (mapcar 'string-to-number i))
+                          (mapcar (lambda (i) (split-string i "\n")) input-day-1)))
+
+(apply '+ (seq-take (sort (mapcar (lambda (i) (apply '+ i)) input-parsed) '>) 3))
+
+#+end_src
+
+#+RESULTS:
+: 200044
+
+
+* Day 2
+
+** Clojure
+*** Part 1
+#+begin_src clojure :results value pp replace :exports both
+
+(def test-input ["A Y"
+                 "B X"
+                 "C Z"])
+
+(def lookup {"A Y" 8
+             "A X" 4
+             "A Z" 3
+
+             "B Y" 5
+             "B Z" 9
+             "B X" 1
+             "C X" 7
+             "C Y" 2
+             "C Z" 6})
+
+(reduce + (map #(get lookup %) test-input))
+
+(def game-input (->> (slurp "./input/input-day-2.txt")
+                     (clojure.string/split-lines)))
+
+(reduce + (map #(get lookup %) game-input))
+#+end_src
+
+#+RESULTS:
+: 15523
+:
+*** Part 2
+
+#+begin_src clojure :results value pp replace :exports both
+
+(def test-input ["A Y"
+                 "B X"
+                 "C Z"])
+
+
+(def lookup {"A X" (+ 0 3)
+             "A Y" (+ 3 1)
+             "A Z" (+ 6 2)
+
+             "B X" (+ 0 1)
+             "B Y" (+ 3 2)
+             "B Z" (+ 6 3)
+
+             "C X" (+ 0 2)
+             "C Y" (+ 3 3)
+             "C Z" (+ 6 1) })
+
+(reduce + (map #(get lookup %) test-input))
+
+(def game-input (->> (slurp "./input/input-day-2.txt")
+                     (clojure.string/split-lines)))
+
+(reduce + (map #(get lookup %) game-input))
+#+end_src
+
+#+RESULTS:
+: 15702
+:
+** Elisp
+*** Part 1
+
+#+begin_src elisp :results pp replace :exports both
+(require 'seq)
+(setq input-day-2 (with-temp-buffer (insert-file-contents "./input/input-day-2.txt")
+                                    (butlast (string-lines (buffer-string)))))
+
+(setq lookup '(("A X" . 4)
+               ("A Y" . 8)
+               ("A Z" . 3)
+               ("B X" . 1)
+               ("B Y" . 5)
+               ("B Z" . 9)
+               ("C X" . 7)
+               ("C Y" . 2)
+               ("C Z" . 6)))
+
+(setq test-input '("A Y"
+                   "B X"
+                   "C Z"))
+
+(seq-reduce #'+ (mapcar (lambda (i) (cdr (assoc i lookup))) test-input) 0)
+
+
+(seq-reduce #'+ (mapcar (lambda (i) (cdr (assoc i lookup))) input-day-2) 0)
+#+end_src
+
+#+RESULTS:
+: 15523
+
+*** Part 2
+
+#+begin_src elisp :results replace :exports both
+(require 'seq)
+(setq input-day-2 (with-temp-buffer (insert-file-contents "./input/input-day-2.txt")
+                                    (butlast (string-lines (buffer-string)))))
+
+(setq lookup '(("A X" . 3)
+               ("A Y" . 4)
+               ("A Z" . 8)
+               ("B X" . 1)
+               ("B Y" . 5)
+               ("B Z" . 9)
+               ("C X" . 2)
+               ("C Y" . 6)
+               ("C Z" . 7)))
+
+(setq test-input '("A Y"
+                   "B X"
+                   "C Z"))
+
+(seq-reduce #'+ (mapcar (lambda (i) (cdr (assoc i lookup))) test-input) 0)
+
+
+(seq-reduce #'+ (mapcar (lambda (i) (cdr (assoc i lookup))) input-day-2) 0)
+#+end_src
+
+#+RESULTS:
+: 15702
+
+* Day 3
+
+** Clojure
+*** Part 1
+#+begin_src clojure :results value pp replace :exports both
+(def testinput ["vJrwpWtwJgWrhcsFMMfFFhFp"
+                "jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL"
+                "PmmdzqPrVvPwwTWBwg"
+                "wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn"
+                "ttgJtRGJQctTZtZT"
+                "CrZsJsPPZsGzwwsLwLmpwMDw"] )
+
+(def alphabet (clojure.string/join (map char (range (int \a) (inc(int \z))))))
+
+(def lookup (str alphabet (clojure.string/upper-case alphabet)))
+
+
+
+
+(defn get-intersection [c]
+  (let [ind (/ (count c) 2)]
+    (clojure.set/intersection (set (take ind c)) (set (nthrest c ind)))))
+
+(defn get-priority [char]
+ (clojure.string/index-of lookup char)
+  )
+
+(->> testinput
+     (map get-intersection)
+     (map first)
+     (map str)
+     (map get-priority)
+     (map inc)
+     (reduce +))
+
+(def input-day-3 (->> "./input/input-day-3.txt"
+                      (slurp)
+                      (clojure.string/split-lines)))
+(->> input-day-3
+     (map get-intersection)
+     (map first)
+     (map str)
+     (map get-priority)
+     (map inc)
+     (reduce +))
+#+end_src
+
+#+RESULTS:
+: Please reevaluate when nREPL is connected
+*** Part 2
+
+#+begin_src clojure :results value pp replace :exports both
+(def testinput ["vJrwpWtwJgWrhcsFMMfFFhFp"
+                "jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL"
+                "PmmdzqPrVvPwwTWBwg"
+                "wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn"
+                "ttgJtRGJQctTZtZT"
+                "CrZsJsPPZsGzwwsLwLmpwMDw"] )
+
+(->> testinput
+     (partition 3)
+     (first)
+     (map set)
+     (apply clojure.set/intersection)
+     )
+
+(def alphabet (clojure.string/join (map char (range (int \a) (inc(int \z))))))
+
+(def lookup (str alphabet (clojure.string/upper-case alphabet)))
+
+
+(defn get-priority [char]
+ (clojure.string/index-of lookup char))
+
+(->> testinput
+     (map get-intersection)
+     (map first)
+     (map str)
+     (map get-priority)
+     (map inc)
+     (reduce +))
+
+(->> testinput
+     (partition 3)
+     (map (fn [i] (map set i)))
+     (map (fn [i] (apply clojure.set/intersection i)))
+     (map first)
+     (map str)
+     (map get-priority)
+     (map inc)
+     (reduce +))
+
+
+(def input-day-3 (->> "./input/input-day-3.txt"
+                      (slurp)
+                      (clojure.string/split-lines)))
+
+(->> input-day-3
+     (partition 3)
+     (map (fn [i] (map set i)))
+     (map (fn [i] (apply clojure.set/intersection i)))
+     (map first)
+     (map str)
+     (map get-priority)
+     (map inc)
+     (reduce +))
+#+end_src
+** Elisp
+*** Part 1
+
+#+begin_src elisp :results pp replace :exports both
+(require 'seq)
+(require 'cl-lib)
+
+;;(setq input-day-2 (with-temp-buffer (insert-file-contents "./input/input-day-2.txt")
+
+;;                                    (butlast (string-lines (buffer-string)))))
+
+(setq testinput '("vJrwpWtwJgWrhcsFMMfFFhFp"
+                 "jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL"
+                 "PmmdzqPrVvPwwTWBwg"
+                 "wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn"
+                 "ttgJtRGJQctTZtZT"
+                 "CrZsJsPPZsGzwwsLwLmpwMDw"))
+
+
+(setq alphabet (string-join (mapcar (lambda (i) (format "%c" i)) (number-sequence ?a ?z))))
+
+(setq lookup (concat alphabet (upcase alphabet)))
+
+(defun get-priorites (char col)
+  (+ 1 (string-search char col)))
+
+(defun get-intersection (col)
+  (let ((ind (/ (length col) 2)))
+    (format "%c" (car (seq-intersection (seq-take col ind) (seq-drop col ind))))))
+
+(seq-reduce #'+ (mapcar (lambda (i) (get-priorites i lookup)) (mapcar 'get-intersection testinput)) 0)
+
+(setq input-day-3 (with-temp-buffer (insert-file-contents "./input/input-day-3.txt")
+                                    (butlast (string-lines (buffer-string)))))
+
+
+(seq-reduce #'+ (mapcar (lambda (i) (get-priorites i lookup)) (mapcar 'get-intersection input-day-3)) 0)
+#+end_src
+
+#+RESULTS:
+: 7845
+
+*** Part 2
+
+#+begin_src elisp :results replace :exports both
+(require 'seq)
+(require 'cl-lib)
+
+;;(setq input-day-2 (with-temp-buffer (insert-file-contents "./input/input-day-2.txt")
+
+;;                                    (butlast (string-lines (buffer-string)))))
+
+(setq testinput '("vJrwpWtwJgWrhcsFMMfFFhFp"
+                 "jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL"
+                 "PmmdzqPrVvPwwTWBwg"
+                 "wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn"
+                 "ttgJtRGJQctTZtZT"
+                 "CrZsJsPPZsGzwwsLwLmpwMDw"))
+
+
+(setq alphabet (string-join (mapcar (lambda (i) (format "%c" i)) (number-sequence ?a ?z))))
+
+(setq lookup (concat alphabet (upcase alphabet)))
+
+(defun get-priorites (char col)
+  (+ 1 (string-search char col)))
+
+(defun get-intersection (col)
+  (let ((ind (/ (length col) 2)))
+    (format "%c" (car (seq-intersection (seq-take col ind) (seq-drop col ind))))))
+
+(defun my-intersection (i)
+  (format "%c" (car
+                (seq-intersection (seq-first i) (seq-intersection (car (cdr i)) (car (last i)))))))
+
+
+(seq-reduce #'+ (mapcar (lambda (i) (get-priorites i lookup))
+                       (mapcar 'my-intersection(mapcar (lambda (i)
+                                                         (mapcar 'string-to-list i))
+                                                       (seq-partition testinput 3)))) 0)
+
+(setq input-day-3 (with-temp-buffer (insert-file-contents "./input/input-day-3.txt")
+                                    (butlast (string-lines (buffer-string)))))
+
+
+(seq-reduce #'+ (mapcar (lambda (i) (get-priorites i lookup))
+                       (mapcar 'my-intersection(mapcar (lambda (i)
+                                                         (mapcar 'string-to-list i))
+                                                       (seq-partition input-day-3 3)))) 0)
+#+end_src
+
+#+RESULTS:
+: 2790
+
+* Day 4
+
+** Clojure
+*** Part 1
+#+begin_src clojure :results value pp replace :exports both
+
+(defn pairs-to-sets [c]
+  (->> c
+       (map #(clojure.string/split % #"-"))
+       (map (fn [i] (map #(Integer/parseInt %) i)))
+       (map (fn [i] (set (range (first i) (inc (second i))))))))
+
+(def testinput (->>["2-4,6-8"
+                    "2-3,4-5"
+                    "5-7,7-9"
+                    "2-8,3-7"
+                    "6-6,4-6"
+                    "2-6,4-8"]
+                   (map #(clojure.string/split % #","))))
+
+(->> testinput
+     (map pairs-to-sets)
+     (filter #(or (clojure.set/subset? (first %) (second %))
+                  (clojure.set/subset? (second %) (first %))))
+     (count))
+
+(def input-day-4 (->> "./input/input-day-4.txt"
+                      (slurp)
+                      (clojure.string/split-lines)
+                      (map #(clojure.string/split % #","))))
+(->> input-day-4
+     (map pairs-to-sets)
+     (filter #(or (clojure.set/subset? (first %) (second %))
+                  (clojure.set/subset? (second %) (first %))))
+     (count))
+#+end_src
+
+#+RESULTS:
+: 657
+:
+*** Part 2
+
+#+begin_src clojure :results value pp replace :exports both
+
+(defn pairs-to-sets [c]
+  (->> c
+       (map #(clojure.string/split % #"-"))
+       (map (fn [i] (map #(Integer/parseInt %) i)))
+       (map (fn [i] (set (range (first i) (inc (second i))))))))
+
+(def testinput (->>["2-4,6-8"
+                    "2-3,4-5"
+                    "5-7,7-9"
+                    "2-8,3-7"
+                    "6-6,4-6"
+                    "2-6,4-8"]
+                   (map #(clojure.string/split % #","))))
+
+(->> testinput
+     (map pairs-to-sets)
+     (map #(apply clojure.set/intersection %))
+     (filter not-empty)
+     (count)
+     )
+
+
+(def input-day-4 (->> "./input/input-day-4.txt"
+                      (slurp)
+                      (clojure.string/split-lines)
+                      (map #(clojure.string/split % #","))))
+(->> input-day-4
+     (map pairs-to-sets)
+     (map #(apply clojure.set/intersection %))
+     (filter not-empty)
+     (count)
+     )
+#+end_src
+
+#+RESULTS:
+: 938
+:
+
+** Elisp
+*** Part 1
+
+#+begin_src elisp :results pp replace :exports both
+(require 'seq)
+(require 'cl-lib)
+
+;;(setq input-day-2 (with-temp-buffer (insert-file-contents "./input/input-day-2.txt")
+
+;;                                    (butlast (string-lines (buffer-string)))))
+
+(setq testinput '("2-4,6-8"
+                  "2-3,4-5"
+                  "5-7,7-9"
+                  "2-8,3-7"
+                  "6-6,4-6"
+                  "2-6,4-8"))
+
+(defun parse-to-list (i)
+  (thread-last (split-string i ",")
+               (mapcar (lambda (i) (split-string i "-")))
+               (mapcar (lambda (i) (number-sequence (string-to-number (car i))
+                                                    (string-to-number (car (cdr i))))))))
+
+(thread-last testinput
+             (mapcar 'parse-to-list)
+             (seq-filter (lambda (i)
+                           (or (cl-subsetp (car i) (car (cdr i)))
+                               (cl-subsetp (car (cdr i)) (car i)))))
+             (seq-length))
+
+(setq input-day-4 (with-temp-buffer (insert-file-contents "./input/input-day-4.txt")
+                                    (butlast (string-lines (buffer-string)))))
+
+(thread-last input-day-4
+             (mapcar 'parse-to-list)
+             (seq-filter (lambda (i)
+                           (or (cl-subsetp (car i) (car (cdr i)))
+                               (cl-subsetp (car (cdr i)) (car i)))))
+             (seq-length))
+#+end_src
+
+#+RESULTS:
+: 657
+
+*** Part 2
+
+#+begin_src elisp :results pp replace :exports both
+(require 'seq)
+(require 'cl-lib)
+
+;;(setq input-day-2 (with-temp-buffer (insert-file-contents "./input/input-day-2.txt")
+
+;;                                    (butlast (string-lines (buffer-string)))))
+
+(setq testinput '("2-4,6-8"
+                  "2-3,4-5"
+                  "5-7,7-9"
+                  "2-8,3-7"
+                  "6-6,4-6"
+                  "2-6,4-8"))
+
+(defun parse-to-list (i)
+  (thread-last (split-string i ",")
+               (mapcar (lambda (i) (split-string i "-")))
+               (mapcar (lambda (i) (number-sequence (string-to-number (car i))
+                                                    (string-to-number (car (cdr i))))))))
+
+(thread-last testinput
+             (mapcar 'parse-to-list)
+             (mapcar (lambda (i) (apply 'seq-intersection i)))
+             (seq-remove (lambda (i) (equal nil i)))
+             (seq-length))
+
+(setq input-day-4 (with-temp-buffer (insert-file-contents "./input/input-day-4.txt")
+                                    (butlast (string-lines (buffer-string)))))
+
+(thread-last input-day-4
+             (mapcar 'parse-to-list)
+             (mapcar (lambda (i) (apply 'seq-intersection i)))
+             (seq-remove (lambda (i) (equal nil i)))
+             (seq-length))
+#+end_src
+
+#+RESULTS:
+: 938
