@@ -323,7 +323,8 @@ Here are the dependencies listed which I need.
 #+end_src
 
 #+RESULTS:
-: Please reevaluate when nREPL is connected
+: 7845
+:
 *** Part 2
 
 #+begin_src clojure :results value pp replace :exports both
@@ -382,6 +383,11 @@ Here are the dependencies listed which I need.
      (map inc)
      (reduce +))
 #+end_src
+
+#+RESULTS:
+: 2790
+:
+
 ** Elisp
 *** Part 1
 
@@ -389,9 +395,6 @@ Here are the dependencies listed which I need.
 (require 'seq)
 (require 'cl-lib)
 
-;;(setq input-day-2 (with-temp-buffer (insert-file-contents "./input/input-day-2.txt")
-
-;;                                    (butlast (string-lines (buffer-string)))))
 
 (setq testinput '("vJrwpWtwJgWrhcsFMMfFFhFp"
                  "jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL"
@@ -430,9 +433,6 @@ Here are the dependencies listed which I need.
 (require 'seq)
 (require 'cl-lib)
 
-;;(setq input-day-2 (with-temp-buffer (insert-file-contents "./input/input-day-2.txt")
-
-;;                                    (butlast (string-lines (buffer-string)))))
 
 (setq testinput '("vJrwpWtwJgWrhcsFMMfFFhFp"
                  "jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL"
@@ -565,10 +565,6 @@ Here are the dependencies listed which I need.
 (require 'seq)
 (require 'cl-lib)
 
-;;(setq input-day-2 (with-temp-buffer (insert-file-contents "./input/input-day-2.txt")
-
-;;                                    (butlast (string-lines (buffer-string)))))
-
 (setq testinput '("2-4,6-8"
                   "2-3,4-5"
                   "5-7,7-9"
@@ -609,9 +605,6 @@ Here are the dependencies listed which I need.
 (require 'seq)
 (require 'cl-lib)
 
-;;(setq input-day-2 (with-temp-buffer (insert-file-contents "./input/input-day-2.txt")
-
-;;                                    (butlast (string-lines (buffer-string)))))
 
 (setq testinput '("2-4,6-8"
                   "2-3,4-5"
@@ -644,3 +637,226 @@ Here are the dependencies listed which I need.
 
 #+RESULTS:
 : 938
+
+* Day 5
+
+** Clojure
+*** Part 1
+#+begin_src clojure :results value pp replace :exports both
+(def testinput (-> "    [D]    \n[N] [C]    \n[Z] [M] [P]\n 1   2   3\n\nmove 1 from 2 to 1\nmove 3 from 1 to 3\nmove 2 from 2 to 1\nmove 1 from 1 to 2"
+                   (clojure.string/split #"\n\n")
+                   (->> (map clojure.string/split-lines)
+                        (into '[]))))
+
+(defn make-game-board [col]
+  (let [crates (->> col
+                    (mapv #(into '[] (partition 3 4 %)))
+                    (mapv (fn [i] (mapv #(clojure.string/trim (clojure.string/join %)) i))))
+        partitions (count crates)]
+    (->> crates
+         (apply interleave)
+         (partition partitions)
+         (mapv #(into '[] %))
+         (mapv (fn [i]
+                 (filter #(not= "" %) i))))))
+
+(defn do-move [board s]
+  (let [split (clojure.string/split s #" ")
+        amount (Integer/parseInt (nth split 1))
+        from (dec (Integer/parseInt (nth split 3)))
+        to   (dec (Integer/parseInt (nth split 5)))
+        boxes (reverse (take amount (nth board from)))]
+    (-> board
+        (update from #(drop amount %))
+        (update to #(flatten (cons boxes %))))))
+
+
+(map first (reduce do-move (make-game-board (butlast (first testinput))) (second testinput)))
+
+
+(def input-day-5 (-> "./input/input-day-5.txt"
+                      (slurp)
+                      (clojure.string/split #"\n\n")
+                      (->> (map clojure.string/split-lines)
+                           (into '[]))))
+
+(map first (reduce do-move (make-game-board (butlast (first input-day-5))) (second input-day-5)))
+#+end_src
+
+#+RESULTS:
+: ("[P]" "[T]" "[W]" "[L]" "[T]" "[D]" "[S]" "[J]" "[V]")
+:
+*** Part 2
+
+#+begin_src clojure :results value pp replace :exports both
+(def testinput (-> "    [D]    \n[N] [C]    \n[Z] [M] [P]\n 1   2   3\n\nmove 1 from 2 to 1\nmove 3 from 1 to 3\nmove 2 from 2 to 1\nmove 1 from 1 to 2"
+                   (clojure.string/split #"\n\n")
+                   (->> (map clojure.string/split-lines)
+                        (into '[]))))
+
+(defn make-game-board [col]
+  (let [crates (->> col
+                    (mapv #(into '[] (partition 3 4 %)))
+                    (mapv (fn [i] (mapv #(clojure.string/trim (clojure.string/join %)) i))))
+        partitions (count crates)]
+    (->> crates
+         (apply interleave)
+         (partition partitions)
+         (mapv #(into '[] %))
+         (mapv (fn [i]
+                 (filter #(not= "" %) i))))))
+
+(defn do-move [board s]
+  (let [split (clojure.string/split s #" ")
+        amount (Integer/parseInt (nth split 1))
+        from (dec (Integer/parseInt (nth split 3)))
+        to   (dec (Integer/parseInt (nth split 5)))
+        boxes  (take amount (nth board from))]
+    (-> board
+        (update from #(drop amount %))
+        (update to #(flatten (cons boxes %))))))
+
+
+(map first (reduce do-move (make-game-board (butlast (first testinput))) (second testinput)))
+
+
+(def input-day-5 (-> "./input/input-day-5.txt"
+                      (slurp)
+                      (clojure.string/split #"\n\n")
+                      (->> (map clojure.string/split-lines)
+                           (into '[]))))
+
+(map first (reduce do-move (make-game-board (butlast (first input-day-5))) (second input-day-5)))
+#+end_src
+
+#+RESULTS:
+: ("[W]" "[Z]" "[M]" "[F]" "[V]" "[G]" "[G]" "[Z]" "[P]")
+:
+
+** Elisp
+*** Part 1
+
+#+begin_src elisp :results pp replace :exports both
+(require 'seq)
+(require 'cl-lib)
+
+
+(setq testinput (thread-first "    [D]    \n[N] [C]    \n[Z] [M] [P]\n 1   2   3\n\nmove 1 from 2 to 1\nmove 3 from 1 to 3\nmove 2 from 2 to 1\nmove 1 from 1 to 2"
+                              (split-string "\n\n")
+                              (thread-last (mapcar 'string-lines))))
+
+
+
+
+(defun partition-by-step (sequence n step)
+  (let ((total '()))
+    (while (not (seq-empty-p sequence))
+      (setq total (concat total (seq-take sequence n)))
+      (setq sequence (seq-drop sequence (+ n step)))
+      )
+    (seq-partition total n))
+  )
+
+(defun make-game-board (col)
+  (let ((crates (thread-last col
+                             (mapcar (lambda (i) (partition-by-step i 3 1)))
+                             (apply #'seq-mapn #'list)
+                             (mapcar (lambda (i) (seq-remove #'string-empty-p
+                                                        (mapcar 'string-trim  i))))
+                             )))crates))
+
+
+(defun do-move (board s)
+  (let* ((split (split-string s " "))
+         (amount (string-to-number (nth 1 split)))
+         (from (1- (string-to-number (nth 3 split))))
+         (to (1-(string-to-number (nth 5 split))))
+         (boxes (seq-reverse (seq-take (nth from board) amount)))
+         (removed-boxes (seq-drop (nth from board) amount))
+         (tmp-board (cl-subst (if (seq-empty-p removed-boxes) (make-list (1+ from) nil) removed-boxes)
+                              (nth from board)
+                              board
+                              :test 'eq)))
+    (cl-subst (flatten-list (cons boxes (nth to tmp-board)))
+              (nth to tmp-board)
+              tmp-board
+              :test 'eq)))
+
+(mapcar 'seq-first (seq-reduce #'do-move (cadr testinput) (make-game-board (butlast (car testinput)))))
+
+
+(setq input-day-5 (with-temp-buffer (insert-file-contents "./input/input-day-5.txt")
+                                    (thread-first (buffer-string)
+                                                 (split-string "\n\n")
+                                                 (thread-last (mapcar 'string-lines)))))
+
+
+(mapcar 'seq-first (seq-reduce #'do-move (butlast (cadr input-day-5)) (make-game-board (butlast (car input-day-5)))))
+#+end_src
+
+#+RESULTS:
+: ("[P]" "[T]" "[W]" "[L]" "[T]" "[D]" "[S]" "[J]" "[V]")
+
+*** Part 2
+
+#+begin_src elisp :results pp replace :exports both
+(require 'seq)
+(require 'cl-lib)
+
+
+
+(setq testinput (thread-first "    [D]    \n[N] [C]    \n[Z] [M] [P]\n 1   2   3\n\nmove 1 from 2 to 1\nmove 3 from 1 to 3\nmove 2 from 2 to 1\nmove 1 from 1 to 2"
+                              (split-string "\n\n")
+                              (thread-last (mapcar 'string-lines))))
+
+
+
+
+(defun partition-by-step (sequence n step)
+  (let ((total '()))
+    (while (not (seq-empty-p sequence))
+      (setq total (concat total (seq-take sequence n)))
+      (setq sequence (seq-drop sequence (+ n step)))
+      )
+    (seq-partition total n))
+  )
+
+(defun make-game-board (col)
+  (let ((crates (thread-last col
+                             (mapcar (lambda (i) (partition-by-step i 3 1)))
+                             (apply #'seq-mapn #'list)
+                             (mapcar (lambda (i) (seq-remove #'string-empty-p
+                                                        (mapcar 'string-trim  i))))
+                             )))crates))
+
+
+(defun do-move (board s)
+  (let* ((split (split-string s " "))
+         (amount (string-to-number (nth 1 split)))
+         (from (1- (string-to-number (nth 3 split))))
+         (to (1-(string-to-number (nth 5 split))))
+         (boxes (seq-take (nth from board) amount))
+         (removed-boxes (seq-drop (nth from board) amount))
+         (tmp-board (cl-subst (if (seq-empty-p removed-boxes) (make-list (1+ from) nil) removed-boxes)
+                              (nth from board)
+                              board
+                              :test 'eq)))
+    (cl-subst (flatten-list (cons boxes (nth to tmp-board)))
+              (nth to tmp-board)
+              tmp-board
+              :test 'eq)))
+
+(mapcar 'seq-first (seq-reduce #'do-move (cadr testinput) (make-game-board (butlast (car testinput)))))
+
+
+(setq input-day-5 (with-temp-buffer (insert-file-contents "./input/input-day-5.txt")
+                                    (thread-first (buffer-string)
+                                                 (split-string "\n\n")
+                                                 (thread-last (mapcar 'string-lines)))))
+
+
+(mapcar 'seq-first (seq-reduce #'do-move (butlast (cadr input-day-5)) (make-game-board (butlast (car input-day-5)))))
+#+end_src
+
+#+RESULTS:
+: ("[W]" "[Z]" "[M]" "[F]" "[V]" "[G]" "[G]" "[Z]" "[P]")
