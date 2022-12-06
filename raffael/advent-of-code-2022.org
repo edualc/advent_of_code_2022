@@ -860,3 +860,174 @@ Here are the dependencies listed which I need.
 
 #+RESULTS:
 : ("[W]" "[Z]" "[M]" "[F]" "[V]" "[G]" "[G]" "[Z]" "[P]")
+
+* Day 6
+
+** Clojure
+*** Part 1
+#+begin_src clojure :results value pp replace :exports both
+(def testinput  ["mjqjpqmgbljsphdztnvjfqwrcgsmlb"
+                "zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw" ])
+
+(->> (partition 4 1 (second testinput))
+
+     (take-while #(not (apply distinct? %)))
+     (last)
+     (clojure.string/join)
+     (clojure.string/index-of (second testinput))
+     (+ 5)
+     )
+
+(def input-day-6 (->> "./input/input-day-6.txt"
+                      (slurp))
+  )
+
+(->> (partition 4 1 input-day-6)
+     (take-while #(not (apply distinct? %)))
+     (last)
+     (clojure.string/join)
+     (clojure.string/index-of input-day-6)
+     (+ 5)
+     )
+#+end_src
+
+#+RESULTS:
+: 1953
+:
+*** Part 2
+
+#+begin_src clojure :results value pp replace :exports both
+(def testinput  ["mjqjpqmgbljsphdztnvjfqwrcgsmlb"])
+
+(->> (partition 14 1 (first testinput))
+
+     (take-while #(not (apply distinct? %)))
+     (last)
+     (clojure.string/join)
+     (clojure.string/index-of (first testinput))
+     (+ 15))
+
+(def input-day-6 (->> "./input/input-day-6.txt"
+                      (slurp)))
+
+(->> (partition 14 1 input-day-6)
+     (take-while #(not (apply distinct? %)))
+     (last)
+     (clojure.string/join)
+     (clojure.string/index-of input-day-6)
+     (+ 15))
+#+end_src
+
+#+RESULTS:
+: 2301
+:
+
+
+** Elisp
+*** Part 1
+
+#+begin_src elisp :results pp replace :exports both
+(require 'seq)
+(require 'cl-lib)
+
+(setq testinput "zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw")
+
+(defun partition-by-step (sequence n step)
+  (let ((total '()))
+    (while (not (seq-empty-p sequence))
+      (setq total (concat total (seq-take sequence n)))
+      (setq sequence (seq-drop sequence step))
+      )
+    (seq-partition total n))
+  )
+
+
+(thread-first testinput
+              (partition-by-step 4 1)
+              (thread-last
+                (seq-take-while (lambda (i) (if (eq (seq-length i)
+                                               (seq-length (seq-uniq i)))
+                                           nil
+                                         t)))
+                (last)
+                (car)
+                )
+              (string-match testinput)
+              (+ 5))
+
+
+(setq input-day-6 (with-temp-buffer (insert-file-contents "./input/input-day-6.txt")
+                                    (buffer-string)))
+
+
+
+(thread-first input-day-6
+              (partition-by-step 4 1)
+              (thread-last
+                (seq-take-while (lambda (i) (if (eq (seq-length i)
+                                               (seq-length (seq-uniq i)))
+                                           nil
+                                         t)))
+
+                (last)
+                (car))
+              (string-match input-day-6)
+              (+ 5))
+#+end_src
+
+#+RESULTS:
+: 1953
+
+*** Part 2
+
+#+begin_src elisp :results pp replace :exports both
+(require 'seq)
+(require 'cl-lib)
+
+(setq testinput "mjqjpqmgbljsphdztnvjfqwrcgsmlb")
+
+(defun partition-by-step (sequence n step)
+  (let ((total '()))
+    (while (not (seq-empty-p sequence))
+      (setq total (concat total (seq-take sequence n)))
+      (setq sequence (seq-drop sequence step))
+      )
+    (seq-partition total n))
+  )
+
+
+(thread-first testinput
+              (partition-by-step 14 1)
+              (thread-last
+                (seq-take-while (lambda (i) (if (eq (seq-length i)
+                                               (seq-length (seq-uniq i)))
+                                           nil
+                                         t)))
+                (last)
+                (car)
+                )
+              (string-match testinput)
+              (+ 15))
+
+
+(setq input-day-6 (with-temp-buffer (insert-file-contents "./input/input-day-6.txt")
+                                    (buffer-string)))
+
+
+
+(thread-first input-day-6
+              (partition-by-step 14 1)
+              (thread-last
+                (seq-take-while (lambda (i) (if (eq (seq-length i)
+                                               (seq-length (seq-uniq i)))
+                                           nil
+                                         t)))
+
+                (last)
+                (car))
+              (string-match input-day-6)
+              (+ 15))
+#+end_src
+
+#+RESULTS:
+: 2301
