@@ -1,4 +1,4 @@
-#+startup: indent
+#+startup: indent outline
 #+options: ':nil *:t -:t ::t <:t H:3 \n:nil ^:t arch:headline author:t
 #+options: broken-links:nil c:nil creator:nil d:(not "LOGBOOK") date:t e:t
 #+options: email:nil f:t inline:t num:t p:nil pri:nil prop:nil stat:t tags:t
@@ -954,6 +954,682 @@ Here are the dependencies listed which I need.
                 )
               (string-match testinput)
               (+ 5))
+
+
+(setq input-day-6 (with-temp-buffer (insert-file-contents "./input/input-day-6.txt")
+                                    (buffer-string)))
+
+
+
+(thread-first input-day-6
+              (partition-by-step 4 1)
+              (thread-last
+                (seq-take-while (lambda (i) (if (eq (seq-length i)
+                                               (seq-length (seq-uniq i)))
+                                           nil
+                                         t)))
+
+                (last)
+                (car))
+              (string-match input-day-6)
+              (+ 5))
+#+end_src
+
+#+RESULTS:
+: 1953
+
+*** Part 2
+
+#+begin_src elisp :results pp replace :exports both
+(require 'seq)
+(require 'cl-lib)
+
+(setq testinput "mjqjpqmgbljsphdztnvjfqwrcgsmlb")
+
+(defun partition-by-step (sequence n step)
+  (let ((total '()))
+    (while (not (seq-empty-p sequence))
+      (setq total (concat total (seq-take sequence n)))
+      (setq sequence (seq-drop sequence step))
+      )
+    (seq-partition total n))
+  )
+
+
+(thread-first testinput
+              (partition-by-step 14 1)
+              (thread-last
+                (seq-take-while (lambda (i) (if (eq (seq-length i)
+                                               (seq-length (seq-uniq i)))
+                                           nil
+                                         t)))
+                (last)
+                (car)
+                )
+              (string-match testinput)
+              (+ 15))
+
+
+(setq input-day-6 (with-temp-buffer (insert-file-contents "./input/input-day-6.txt")
+                                    (buffer-string)))
+
+
+
+(thread-first input-day-6
+              (partition-by-step 14 1)
+              (thread-last
+                (seq-take-while (lambda (i) (if (eq (seq-length i)
+                                               (seq-length (seq-uniq i)))
+                                           nil
+                                         t)))
+
+                (last)
+                (car))
+              (string-match input-day-6)
+              (+ 15))
+#+end_src
+
+#+RESULTS:
+: 2301
+* Day 7
+
+** Clojure
+*** Part 1
+#+begin_src clojure :results value pp replace :exports both
+(def testinput (map #(clojure.string/split % #" ")["$ cd /"
+                                                   "$ ls"
+                                                   "dir a"
+                                                   "14848514 b.txt"
+                                                   "8504156 c.dat"
+                                                   "dir d"
+                                                   "$ cd a"
+                                                   "$ ls"
+                                                   "dir e"
+                                                   "29116 f"
+                                                   "2557 g"
+                                                   "62596 h.lst"
+                                                   "$ cd e"
+                                                   "$ ls"
+                                                   "584 i"
+                                                   "$ cd .."
+                                                   "$ cd .."
+                                                   "$ cd d"
+                                                   "$ ls"
+                                                   "4060174 j"
+                                                   "8033020 d.log"
+                                                   "5626152 d.ext"
+                                                   "7214296 k"]))
+(defn create-dir-map [col]
+  (loop [xs col file {} acc []]
+    (if xs
+      (let [x (first xs)]
+        (cond (and (= (first x) "$")
+                   (= (second x) "cd")
+                   (not= (last x) "..")) (recur (next xs)  {:name (last x)
+                                                            :dir []
+                                                            :files []} (cons file acc))
+              (and (= (first x) "$") (= (second x) "ls")) (recur (next xs) file acc)
+              (and (= (first x) "$") (= (second x) "cd")
+                   (= (last x) "..")) (recur (next xs) {} (cons file acc))
+              (and (= (first x) "dir")) (recur (next xs) (update file :dir conj (last x)) acc)
+              :else (recur (next xs) (update file :files conj x) acc)))
+
+      (cons file acc))))
+
+(defn calculate-file-size [i]
+  (reduce +(map (fn [i] (Integer/parseInt (first i)))(:files i))))
+
+(def dirs
+  (->> testinput (create-dir-map)
+       (filter not-empty)
+       (map (fn [i] (assoc i :size (calculate-file-size i))))))
+
+
+(for [d dirs]
+  (let [subdirs (:dir d)
+        sizes (flatten (map (fn [s] (map :size (filter #(= (:name %) s) dirs))) subdirs))
+        sum-sizes (reduce + sizes)]
+    (update d :size + sum-sizes))
+  )
+
+
+(defn get-subdirs [d dirs]
+  (loop [xs (:dir d) subdirs []]
+    (if xs
+      (let [x (first xs)
+            xdir (flatten (map :dir (filter #(= (:name %) x) dirs)))]
+        (cond (not-empty xdir) (recur (flatten(conj (next xs) xdir)) (flatten (conj subdirs xdir)))
+              :else (recur (next xs) subdirs)))
+
+      (concat subdirs (:dir d)))))
+
+(defn get-size-subdirs [d dirs]
+  (let [subdirs (get-subdirs d dirs)]
+    (+ (:size d)
+       (->> subdirs
+            (map (fn [d] (filter #(= d (:name %)) dirs)))
+            (flatten)
+            (map :size)
+            (reduce +)))))
+
+(->> dirs
+    (map #(get-size-subdirs % dirs))
+    (filter #(<= % 100000))
+    )
+
+(def input-day-7 (->> "./input/input-day-7.txt"
+                      (slurp)
+                      (clojure.string/split-lines)
+                      (map #(clojure.string/split % #" "))))
+
+(def dirs-7
+  (as-> input-day-7 d
+    (create-dir-map d)
+    (filter not-empty d)
+    (map (fn [i] (assoc i :size (calculate-file-size i))) d)))
+
+
+(->> dirs-7
+    (map #(get-size-subdirs % dirs))
+    (filter #(< % 100000))
+    )
+
+#+end_src
+
+#+RESULTS:
+: Please reevaluate when nREPL is connected
+*** Part 2
+
+#+begin_src clojure :results value pp replace :exports both
+(def testinput  ["mjqjpqmgbljsphdztnvjfqwrcgsmlb"])
+
+(->> (partition 14 1 (first testinput))
+
+     (take-while #(not (apply distinct? %)))
+     (last)
+     (clojure.string/join)
+     (clojure.string/index-of (first testinput))
+     (+ 15))
+
+(def input-day-6 (->> "./input/input-day-6.txt"
+                      (slurp)))
+
+(->> (partition 14 1 input-day-6)
+     (take-while #(not (apply distinct? %)))
+     (last)
+     (clojure.string/join)
+     (clojure.string/index-of input-day-6)
+     (+ 15))
+#+end_src
+
+#+RESULTS:
+: 2301
+:
+
+
+** Elisp
+*** Part 1
+
+#+begin_src elisp :results pp replace :exports both
+(require 'seq)
+(require 'cl-lib)
+
+(setq testinput "zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw")
+
+(defun partition-by-step (sequence n step)
+  (let ((total '()))
+    (while (not (seq-empty-p sequence))
+      (setq total (concat total (seq-take sequence n)))
+      (setq sequence (seq-drop sequence step))
+      )
+    (seq-partition total n))
+  )
+
+
+(thread-first testinput
+              (partition-by-step 4 1)
+              (thread-last
+                (seq-take-while (lambda (i) (if (eq (seq-length i)
+                                               (seq-length (seq-uniq i)))
+                                           nil
+                                         t)))
+                (last)
+                (car)
+                )
+              (string-match testinput)
+              (+ 5))
+
+
+(setq input-day-6 (with-temp-buffer (insert-file-contents "./input/input-day-6.txt")
+                                    (buffer-string)))
+
+
+
+(thread-first input-day-6
+              (partition-by-step 4 1)
+              (thread-last
+                (seq-take-while (lambda (i) (if (eq (seq-length i)
+                                               (seq-length (seq-uniq i)))
+                                           nil
+                                         t)))
+
+                (last)
+                (car))
+              (string-match input-day-6)
+              (+ 5))
+#+end_src
+
+#+RESULTS:
+: 1953
+
+*** Part 2
+
+#+begin_src elisp :results pp replace :exports both
+(require 'seq)
+(require 'cl-lib)
+
+(setq testinput "mjqjpqmgbljsphdztnvjfqwrcgsmlb")
+
+(defun partition-by-step (sequence n step)
+  (let ((total '()))
+    (while (not (seq-empty-p sequence))
+      (setq total (concat total (seq-take sequence n)))
+      (setq sequence (seq-drop sequence step))
+      )
+    (seq-partition total n))
+  )
+
+
+(thread-first testinput
+              (partition-by-step 14 1)
+              (thread-last
+                (seq-take-while (lambda (i) (if (eq (seq-length i)
+                                               (seq-length (seq-uniq i)))
+                                           nil
+                                         t)))
+                (last)
+                (car)
+                )
+              (string-match testinput)
+              (+ 15))
+
+
+(setq input-day-6 (with-temp-buffer (insert-file-contents "./input/input-day-6.txt")
+                                    (buffer-string)))
+
+
+
+(thread-first input-day-6
+              (partition-by-step 14 1)
+              (thread-last
+                (seq-take-while (lambda (i) (if (eq (seq-length i)
+                                               (seq-length (seq-uniq i)))
+                                           nil
+                                         t)))
+
+                (last)
+                (car))
+              (string-match input-day-6)
+              (+ 15))
+#+end_src
+
+#+RESULTS:
+: 2301
+
+* Day 8
+
+** Clojure
+*** Part 1
+#+begin_src clojure :results value pp replace :exports both
+(def testinput [[3 0 3 7 3]
+                [2 5 5 1 2]
+                [6 5 3 3 2]
+                [3 3 5 4 9]
+                [3 5 3 9 0]] )
+
+(def testinput-columns
+  (partition  5 (count testinput) (apply interleave testinput)))
+
+(nth testinput-columns 1)
+
+(defn visible? [ind coll]
+  (let [t (nth coll ind)
+        trees-before (take ind coll)
+        trees-after (nthrest coll (inc ind))]
+    (or
+     (every? #(> t %) trees-before)
+     (every? #(> t %) trees-after)
+     )))
+
+(->> testinput
+     (second)
+     (visible? 2))
+
+
+(defn get-visible-trees [treemap]
+  (let [rows treemap
+        columns (partition (count treemap) (apply interleave treemap))]
+    (for [x (range 0 (count treemap)) y (range 0 (count (first treemap)))]
+      (or (visible? y (nth rows x))
+          (visible? x (nth columns y)))
+
+      )))
+
+(count (filter true? (get-visible-trees testinput)))
+
+(def input-day-8 (->> "./input/input-day-8.txt"
+                      (slurp)
+                      (clojure.string/split-lines)
+                      (map #(clojure.string/split % #""))
+                      (mapv (fn [i] (mapv #(Integer/parseInt %) i)))))
+
+(count (filter true? (get-visible-trees input-day-8)))
+#+end_src
+
+#+RESULTS:
+: 1851
+:
+*** Part 2
+
+#+begin_src clojure :results value pp replace :exports both
+(def testinput [[3 0 3 7 3]
+                [2 5 5 1 2]
+                [6 5 3 3 2]
+                [3 3 5 4 9]
+                [3 5 3 9 0]] )
+
+
+(defn my-take-while [i coll]
+  (loop [[x & xs] coll acc []]
+    (if x
+      (cond (= x i) (conj acc true)
+            (< i x) (conj acc true)
+            (> i x) (recur xs (conj acc true))
+            :else acc)
+      acc)))
+
+(defn count-visible-trees? [ind coll]
+  (let [t (nth coll ind)
+        trees-before (reverse (take ind coll))
+        trees-after (nthrest coll (inc ind))]
+    (* (count (my-take-while t trees-before))
+       (count (my-take-while t trees-after)))
+    ))
+
+(->> testinput
+     (second)
+     (visible? 2))
+
+
+(defn get-visible-trees [treemap]
+  (let [rows treemap
+        columns (partition (count treemap) (apply interleave treemap))]
+    (for [x (range 0 (count treemap)) y (range 0 (count (first treemap)))]
+      (* (count-visible-trees? y (nth rows x))
+          (count-visible-trees? x (nth columns y)))
+
+      )))
+
+(apply max (get-visible-trees testinput))
+
+(def input-day-8 (->> "./input/input-day-8.txt"
+                      (slurp)
+                      (clojure.string/split-lines)
+                      (map #(clojure.string/split % #""))
+                      (mapv (fn [i] (mapv #(Integer/parseInt %) i)))))
+
+(apply max (get-visible-trees input-day-8))
+#+end_src
+
+#+RESULTS:
+: 574080
+:
+
+
+** Elisp
+*** Part 1
+
+#+begin_src elisp :results pp replace :exports both
+(require 'seq)
+(require 'cl-lib)
+
+(setq testinput '((3 0 3 7 3)
+                  (2 5 5 1 2)
+                  (6 5 3 3 2)
+                  (3 3 5 4 9)
+                  (3 5 3 9 0)))
+
+(apply #'seq-mapn #'list testinput)
+
+
+(defun visible (ind coll)
+  (let ((t (nth ind coll))
+        (trees-before (seq-take coll ind))
+        (trees-after (nthcdr (1+ ind) coll)))
+    (or (seq-every-p (lambda (i) (> t i)) trees-before)
+        (seq-every-p (lambda (i) (> t i)) trees-after))))
+
+(defun get-visible-trees (treemap)
+  (let ((rows treemap)
+        (columns (apply #'seq-mapn #'list treemap)))
+    (dolist (x (number-sequence (length treemap)))
+      (visible x )))
+  )
+
+
+(setq input-day-6 (with-temp-buffer (insert-file-contents "./input/input-day-6.txt")
+                                    (buffer-string)))
+
+
+
+(thread-first input-day-6
+              (partition-by-step 4 1)
+              (thread-last
+                (seq-take-while (lambda (i) (if (eq (seq-length i)
+                                               (seq-length (seq-uniq i)))
+                                           nil
+                                         t)))
+
+                (last)
+                (car))
+              (string-match input-day-6)
+              (+ 5))
+#+end_src
+
+#+RESULTS:
+: 1953
+
+*** Part 2
+
+#+begin_src elisp :results pp replace :exports both
+(require 'seq)
+(require 'cl-lib)
+
+(setq testinput "mjqjpqmgbljsphdztnvjfqwrcgsmlb")
+
+(defun partition-by-step (sequence n step)
+  (let ((total '()))
+    (while (not (seq-empty-p sequence))
+      (setq total (concat total (seq-take sequence n)))
+      (setq sequence (seq-drop sequence step))
+      )
+    (seq-partition total n))
+  )
+
+
+(thread-first testinput
+              (partition-by-step 14 1)
+              (thread-last
+                (seq-take-while (lambda (i) (if (eq (seq-length i)
+                                               (seq-length (seq-uniq i)))
+                                           nil
+                                         t)))
+                (last)
+                (car)
+                )
+              (string-match testinput)
+              (+ 15))
+
+
+(setq input-day-6 (with-temp-buffer (insert-file-contents "./input/input-day-6.txt")
+                                    (buffer-string)))
+
+
+
+(thread-first input-day-6
+              (partition-by-step 14 1)
+              (thread-last
+                (seq-take-while (lambda (i) (if (eq (seq-length i)
+                                               (seq-length (seq-uniq i)))
+                                           nil
+                                         t)))
+
+                (last)
+                (car))
+              (string-match input-day-6)
+              (+ 15))
+#+end_src
+
+#+RESULTS:
+: 2301
+
+* Day 9
+
+** Clojure
+*** Part 1
+#+begin_src clojure :results value pp replace :exports both
+(def testinput ["R" 4
+                "U" 4
+                "L" 3
+                "D" 1
+                "R" 4
+                "D" 1
+                "L" 5
+                "R" 2])
+
+
+(defn expand-row-r [coll]
+  (conj coll "."))
+
+(defn expand-row-l [coll]
+  (conj coll "."))
+
+(defn make-game-board [r c]
+  (into '[]
+        (for [i (range r)]
+          (into '[] (repeat c ".")))))
+
+
+(defn right [[x y]]
+  [(inc x) y])
+
+(defn left [[x y]]
+  [(dec x) y])
+
+(defn up [[x y]]
+  [x (dec y)])
+
+(defn down [[x y]]
+  [x (inc y)])
+
+(defn head-tail-distance [[hx hy] [tx ty]]
+  [(- hx tx)
+   (- hy ty)])
+
+(defn process-instructions [inst]
+  (loop [last-head-pos []])
+  )
+#+end_src
+
+#+RESULTS:
+: 1851
+:
+*** Part 2
+
+#+begin_src clojure :results value pp replace :exports both
+(def testinput [[3 0 3 7 3]
+                [2 5 5 1 2]
+                [6 5 3 3 2]
+                [3 3 5 4 9]
+                [3 5 3 9 0]] )
+
+
+(defn my-take-while [i coll]
+  (loop [[x & xs] coll acc []]
+    (if x
+      (cond (= x i) (conj acc true)
+            (< i x) (conj acc true)
+            (> i x) (recur xs (conj acc true))
+            :else acc)
+      acc)))
+
+(defn count-visible-trees? [ind coll]
+  (let [t (nth coll ind)
+        trees-before (reverse (take ind coll))
+        trees-after (nthrest coll (inc ind))]
+    (* (count (my-take-while t trees-before))
+       (count (my-take-while t trees-after)))
+    ))
+
+(->> testinput
+     (second)
+     (visible? 2))
+
+
+(defn get-visible-trees [treemap]
+  (let [rows treemap
+        columns (partition (count treemap) (apply interleave treemap))]
+    (for [x (range 0 (count treemap)) y (range 0 (count (first treemap)))]
+      (* (count-visible-trees? y (nth rows x))
+          (count-visible-trees? x (nth columns y)))
+
+      )))
+
+(apply max (get-visible-trees testinput))
+
+(def input-day-8 (->> "./input/input-day-8.txt"
+                      (slurp)
+                      (clojure.string/split-lines)
+                      (map #(clojure.string/split % #""))
+                      (mapv (fn [i] (mapv #(Integer/parseInt %) i)))))
+
+(apply max (get-visible-trees input-day-8))
+#+end_src
+
+#+RESULTS:
+: 574080
+:
+
+
+** Elisp
+*** Part 1
+
+#+begin_src elisp :results pp replace :exports both
+(require 'seq)
+(require 'cl-lib)
+
+(setq testinput '((3 0 3 7 3)
+                  (2 5 5 1 2)
+                  (6 5 3 3 2)
+                  (3 3 5 4 9)
+                  (3 5 3 9 0)))
+
+(apply #'seq-mapn #'list testinput)
+
+
+(defun visible (ind coll)
+  (let ((t (nth ind coll))
+        (trees-before (seq-take coll ind))
+        (trees-after (nthcdr (1+ ind) coll)))
+    (or (seq-every-p (lambda (i) (> t i)) trees-before)
+        (seq-every-p (lambda (i) (> t i)) trees-after))))
+
+(defun get-visible-trees (treemap)
+  (let ((rows treemap)
+        (columns (apply #'seq-mapn #'list treemap)))
+    (dolist (x (number-sequence (length treemap)))
+      (visible x )))
+  )
 
 
 (setq input-day-6 (with-temp-buffer (insert-file-contents "./input/input-day-6.txt")
